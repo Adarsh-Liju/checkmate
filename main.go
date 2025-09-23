@@ -2,6 +2,7 @@
 package main
 
 import (
+	"embed"
 	"html/template"
 	"log"
 	"net/http"
@@ -14,6 +15,9 @@ import (
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
+
+//go:embed templates/*
+var templatesFS embed.FS
 
 // Task model represents a task in the system
 type Task struct {
@@ -54,16 +58,19 @@ func main() {
 	// create gin router
 	r := gin.Default()
 
-	// load html templates
-	r.SetFuncMap(template.FuncMap{
+	// Parse templates from embedded filesystem
+	tmpl, err := template.New("").Funcs(template.FuncMap{
 		"formatDate": func(t *time.Time) string {
 			if t == nil {
 				return ""
 			}
 			return t.Format("2006-01-02")
 		},
-	})
-	r.LoadHTMLGlob("templates/*.html")
+	}).ParseFS(templatesFS, "templates/*.html")
+	if err != nil {
+		log.Fatalf("failed to parse templates: %v", err)
+	}
+	r.SetHTMLTemplate(tmpl)
 
 	// CORS - allow all for dev (adjust in prod)
 	r.Use(cors.Default())
@@ -87,8 +94,7 @@ func main() {
 	}
 
 	log.Printf("listening on :%s, using DB: %s", port, dbPath)
-	if err := r.Run(":" + port); 
-	err != nil {
+	if err := r.Run(":" + port); err != nil {
 		log.Fatalf("server failed: %v", err)
 	}
 	log.Printf("The website is running at http://localhost:%s/", port)

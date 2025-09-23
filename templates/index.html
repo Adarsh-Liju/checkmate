@@ -4,68 +4,432 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>Checkmate Tasks</title>
-  <link href="https://cdn.jsdelivr.net/npm/daisyui@3.9.4/dist/full.css" rel="stylesheet" type="text/css" />
-  <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@3.9.4/dist/full.css" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      :root {
+        --bg-primary: #f8fafc;
+        --bg-secondary: #ffffff;
+        --bg-tertiary: #f1f5f9;
+        --text-primary: #1e293b;
+        --text-secondary: #64748b;
+        --text-muted: #94a3b8;
+        --border-color: #e2e8f0;
+        --shadow-color: rgba(0, 0, 0, 0.1);
+        --gradient-start: #667eea;
+        --gradient-end: #764ba2;
+      }
+
+      [data-theme="dark"] {
+        --bg-primary: #0f172a;
+        --bg-secondary: #1e293b;
+        --bg-tertiary: #334155;
+        --text-primary: #f1f5f9;
+        --text-secondary: #cbd5e1;
+        --text-muted: #64748b;
+        --border-color: #334155;
+        --shadow-color: rgba(0, 0, 0, 0.3);
+        --gradient-start: #4f46e5;
+        --gradient-end: #7c3aed;
+      }
+
+      @keyframes fadeInUp {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      @keyframes slideIn {
+        from {
+          opacity: 0;
+          transform: translateX(-20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateX(0);
+        }
+      }
+      @keyframes themeTransition {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+
+      .fade-in-up {
+        animation: fadeInUp 0.6s ease-out;
+      }
+      .slide-in {
+        animation: slideIn 0.4s ease-out;
+      }
+      .theme-transition {
+        animation: themeTransition 0.3s ease-in-out;
+      }
+
+      .card-hover {
+        transition: all 0.3s ease;
+      }
+      .card-hover:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px var(--shadow-color);
+      }
+
+      /* Dark mode styles */
+      body {
+        background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-tertiary) 100%);
+        color: var(--text-primary);
+        transition: all 0.3s ease;
+      }
+
+      .navbar {
+        background: rgba(255, 255, 255, 0.8);
+        backdrop-filter: blur(12px);
+        border-bottom: 1px solid var(--border-color);
+      }
+
+      [data-theme="dark"] .navbar {
+        background: rgba(30, 41, 59, 0.8);
+      }
+
+      .card {
+        background: rgba(255, 255, 255, 0.7);
+        border: 1px solid var(--border-color);
+        transition: all 0.3s ease;
+      }
+
+      [data-theme="dark"] .card {
+        background: rgba(30, 41, 59, 0.7);
+      }
+
+      .input, .textarea {
+        background: var(--bg-secondary);
+        border-color: var(--border-color);
+        color: var(--text-primary);
+        transition: all 0.3s ease;
+      }
+
+      .input:focus, .textarea:focus {
+        border-color: var(--gradient-start);
+        box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+      }
+
+      [data-theme="dark"] .input:focus, 
+      [data-theme="dark"] .textarea:focus {
+        box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
+      }
+
+      .btn-primary {
+        background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+        border: none;
+        transition: all 0.3s ease;
+      }
+
+      .btn-primary:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4);
+      }
+
+      .text-gradient {
+        background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+
+      .theme-toggle {
+        transition: all 0.3s ease;
+      }
+
+      .theme-toggle:hover {
+        transform: scale(1.1);
+      }
+
+      /* Dark mode specific overrides */
+      [data-theme="dark"] .badge-outline {
+        border-color: var(--border-color);
+        color: var(--text-secondary);
+      }
+
+      [data-theme="dark"] .btn-ghost:hover {
+        background-color: var(--bg-tertiary);
+      }
+
+      [data-theme="dark"] .btn-circle {
+        color: var(--text-secondary);
+      }
+
+      [data-theme="dark"] .btn-circle:hover {
+        background-color: var(--bg-tertiary);
+        color: var(--text-primary);
+      }
+
+      /* Additional dark mode overrides */
+      [data-theme="dark"] .btn-ghost {
+        color: var(--text-secondary);
+      }
+
+      [data-theme="dark"] .btn-ghost:hover {
+        background-color: var(--bg-tertiary);
+        color: var(--text-primary);
+      }
+
+      [data-theme="dark"] .label-text {
+        color: var(--text-secondary);
+      }
+
+      [data-theme="dark"] .placeholder {
+        color: var(--text-muted);
+      }
+
+      [data-theme="dark"] .loading {
+        color: var(--text-primary);
+      }
+
+      /* Ensure proper contrast in dark mode */
+      [data-theme="dark"] .badge {
+        background-color: var(--bg-tertiary);
+        color: var(--text-primary);
+      }
+
+      [data-theme="dark"] .badge-success {
+        background-color: #059669;
+        color: white;
+      }
+
+      [data-theme="dark"] .badge-warning {
+        background-color: #d97706;
+        color: white;
+      }
+
+      [data-theme="dark"] .badge-info {
+        background-color: #0284c7;
+        color: white;
+      }
+
+      [data-theme="dark"] .badge-error {
+        background-color: #dc2626;
+        color: white;
+      }
+    </style>
   </head>
-  <body>
-    <div class="navbar bg-base-100 shadow shadow-sm mb-8">
+  <body class="min-h-screen theme-transition">
+    <!-- Enhanced Navbar -->
+    <div class="navbar shadow-lg sticky top-0 z-50">
       <div class="flex-1">
-        <a class="btn btn-ghost normal-case text-2xl font-bold">Checkmate</a>
+        <a class="btn btn-ghost normal-case text-2xl font-bold text-gradient">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          Checkmate
+        </a>
       </div>
-      <div class="flex-none">
-        <button class="btn btn-square btn-ghost">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="inline-block w-6 h-6 stroke-current"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 12h.01M12 12h.01M18 12h.01"></path></svg>
+      <div class="flex-none gap-2">
+        <div class="badge badge-primary badge-outline">Tasks</div>
+        <button id="theme-toggle" class="btn btn-circle btn-ghost theme-toggle" title="Toggle dark mode">
+          <svg id="sun-icon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+          </svg>
+          <svg id="moon-icon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+          </svg>
         </button>
       </div>
     </div>
 
-    <div class="max-w-xl mx-auto mt-10">
-      <div class="card bg-base-100 shadow-xl mb-8">
-        <div class="card-body">
-          <h2 class="card-title text-lg font-semibold mb-2">Add New Task</h2>
-          <form action="/add" method="post" class="space-y-4">
-            <div>
-              <label class="label" for="title">
-                <span class="label-text">Title</span>
-              </label>
-              <input id="title" name="title" type="text" class="input input-bordered w-full" required />
+    <!-- Main Content -->
+    <div class="max-w-4xl mx-auto px-4 py-8">
+      <!-- Add Task Card -->
+      <div class="card backdrop-blur-sm shadow-xl mb-8 card-hover fade-in-up">
+        <div class="card-body p-8">
+          <div class="flex items-center gap-3 mb-6">
+            <div class="p-3 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+              </svg>
             </div>
-            <div>
+            <h2 class="card-title text-2xl font-bold" style="color: var(--text-primary);">Add New Task</h2>
+          </div>
+          <form action="/add" method="post" class="space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div class="form-control">
+                <label class="label" for="title">
+                  <span class="label-text font-semibold" style="color: var(--text-secondary);">Task Title *</span>
+                </label>
+                <input id="title" name="title" type="text" class="input input-bordered w-full focus:input-primary transition-all duration-200" placeholder="What needs to be done?" required />
+              </div>
+              <div class="form-control">
+                <label class="label" for="due_date">
+                  <span class="label-text font-semibold" style="color: var(--text-secondary);">Due Date</span>
+                </label>
+                <input id="due_date" name="due_date" type="date" class="input input-bordered w-full focus:input-primary transition-all duration-200" />
+              </div>
+            </div>
+            <div class="form-control">
               <label class="label" for="description">
-                <span class="label-text">Description</span>
+                <span class="label-text font-semibold" style="color: var(--text-secondary);">Description</span>
               </label>
-              <textarea id="description" name="description" class="textarea textarea-bordered w-full"></textarea>
+              <textarea id="description" name="description" class="textarea textarea-bordered w-full focus:textarea-primary transition-all duration-200 h-24" placeholder="Add more details about this task..."></textarea>
             </div>
-            <div>
-              <label class="label" for="due_date">
-                <span class="label-text">Due date</span>
-              </label>
-              <input id="due_date" name="due_date" type="date" class="input input-bordered w-full" />
-            </div>
-            <div class="flex gap-2 pt-2">
-              <button class="btn btn-primary" type="submit">Add</button>
-              <button type="reset" class="btn btn-ghost">Reset</button>
+            <div class="flex gap-3 pt-4">
+              <button class="btn btn-primary btn-lg px-8 hover:scale-105 transition-all duration-200" type="submit">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                </svg>
+                Add Task
+              </button>
+              <button type="reset" class="btn btn-ghost btn-lg px-8 hover:bg-gray-100 transition-all duration-200">Reset</button>
             </div>
           </form>
         </div>
       </div>
 
-      <div class="card bg-base-100 shadow-xl">
-        <div class="card-body">
-          <div class="flex items-center justify-between mb-2">
-            <span class="card-title text-lg font-semibold">Tasks</span>
-            <span class="text-sm text-base-content/60">Most recent first</span>
+      <!-- Tasks List Card -->
+      <div class="card backdrop-blur-sm shadow-xl card-hover fade-in-up">
+        <div class="card-body p-8">
+          <div class="flex items-center justify-between mb-6">
+            <div class="flex items-center gap-3">
+              <div class="p-3 bg-gradient-to-r from-green-500 to-blue-500 rounded-xl">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+              </div>
+              <h3 class="card-title text-2xl font-bold" style="color: var(--text-primary);">Your Tasks</h3>
+            </div>
+            <div class="badge badge-outline badge-lg">Most recent first</div>
           </div>
-          <div id="tasks-list">
-            {{ template "_task_row.html" . }}
+          <div id="tasks-list" class="space-y-4">
+            {{ template "task_row.html" . }}
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Floating Action Button -->
-    <button class="btn btn-primary btn-circle fixed bottom-8 right-8 shadow-lg" onclick="document.getElementById('title').focus();">
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+    <!-- Enhanced Floating Action Button -->
+    <button class="btn btn-primary btn-circle fixed bottom-8 right-8 shadow-2xl hover:scale-110 transition-all duration-300 z-40" onclick="document.getElementById('title').focus(); document.querySelector('.card-hover').scrollIntoView({behavior: 'smooth'});">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+      </svg>
     </button>
+    
+    <!-- Scroll to Top Button -->
+    <button class="btn btn-ghost btn-circle fixed bottom-8 right-20 shadow-lg hover:scale-110 transition-all duration-300 z-40" onclick="window.scrollTo({top: 0, behavior: 'smooth'});">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18" />
+      </svg>
+    </button>
+    
+    <!-- Enhanced JavaScript for better UX -->
+    <script>
+      // Dark mode functionality
+      function initTheme() {
+        const themeToggle = document.getElementById('theme-toggle');
+        const sunIcon = document.getElementById('sun-icon');
+        const moonIcon = document.getElementById('moon-icon');
+        const body = document.body;
+        
+        // Get saved theme or detect system preference
+        const savedTheme = localStorage.getItem('theme');
+        const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const initialTheme = savedTheme || (systemPrefersDark ? 'dark' : 'light');
+        body.setAttribute('data-theme', initialTheme);
+        
+        // Update icons based on current theme
+        function updateIcons(theme) {
+          if (theme === 'dark') {
+            sunIcon.classList.add('hidden');
+            moonIcon.classList.remove('hidden');
+          } else {
+            sunIcon.classList.remove('hidden');
+            moonIcon.classList.add('hidden');
+          }
+        }
+        
+        updateIcons(savedTheme);
+        
+        // Toggle theme
+        themeToggle.addEventListener('click', function() {
+          const currentTheme = body.getAttribute('data-theme');
+          const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+          
+          body.setAttribute('data-theme', newTheme);
+          localStorage.setItem('theme', newTheme);
+          updateIcons(newTheme);
+          
+          // Add transition effect
+          body.classList.add('theme-transition');
+          setTimeout(() => {
+            body.classList.remove('theme-transition');
+          }, 300);
+        });
+      }
+
+      // Auto-focus on title input when page loads
+      document.addEventListener('DOMContentLoaded', function() {
+        // Initialize theme
+        initTheme();
+        
+        const titleInput = document.getElementById('title');
+        if (titleInput) {
+          titleInput.focus();
+        }
+        
+        // Add smooth scrolling for better UX
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+          anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            document.querySelector(this.getAttribute('href')).scrollIntoView({
+              behavior: 'smooth'
+            });
+          });
+        });
+        
+        // Add form validation feedback
+        const form = document.querySelector('form[action="/add"]');
+        if (form) {
+          form.addEventListener('submit', function(e) {
+            const title = document.getElementById('title').value.trim();
+            if (!title) {
+              e.preventDefault();
+              document.getElementById('title').focus();
+              document.getElementById('title').classList.add('input-error');
+              setTimeout(() => {
+                document.getElementById('title').classList.remove('input-error');
+              }, 3000);
+              return false;
+            }
+          });
+        }
+        
+        // Add loading state to buttons
+        const buttons = document.querySelectorAll('button[type="submit"]');
+        buttons.forEach(button => {
+          button.addEventListener('click', function() {
+            if (this.type === 'submit') {
+              this.innerHTML = '<span class="loading loading-spinner loading-sm"></span> Processing...';
+              this.disabled = true;
+            }
+          });
+        });
+      });
+      
+      // Add hover effects for better interactivity
+      document.addEventListener('DOMContentLoaded', function() {
+        const cards = document.querySelectorAll('.card-hover');
+        cards.forEach(card => {
+          card.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-4px)';
+          });
+          card.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0)';
+          });
+        });
+      });
+    </script>
   </body>
 </html>

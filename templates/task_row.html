@@ -1,0 +1,132 @@
+{{ define "task_row.html" }}
+  <style>
+  </style>
+  <div>
+    {{ if not .Tasks }}
+      <div class="flex flex-col items-center my-12 py-12" style="color: var(--text-muted);">
+        <div class="relative">
+          <div class="w-24 h-24 bg-gradient-to-br from-blue-100 to-purple-100 dark:from-blue-900/30 dark:to-purple-900/30 rounded-full flex items-center justify-center mb-6">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-blue-400 dark:text-blue-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <div class="absolute -top-2 -right-2 w-6 h-6 bg-yellow-400 dark:bg-yellow-500 rounded-full flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+          </div>
+        </div>
+        <h3 class="text-xl font-semibold mb-2" style="color: var(--text-secondary);">No tasks yet!</h3>
+        <p class="text-center max-w-sm" style="color: var(--text-muted);">Start by adding your first task above. Break down your goals into manageable steps.</p>
+      </div>
+    {{ end }}
+    {{ range .Tasks }}
+      <div class="group task-card backdrop-blur-sm rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 mb-4 overflow-hidden" style="background: rgba(35, 47, 63, 0.8); border: 1px solid var(--border-color);">
+        <div class="p-6">
+          <!-- Task Header -->
+          <div class="flex items-start justify-between mb-4">
+            <div class="flex-1">
+              <h4 class="task-title font-bold text-lg mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-200">{{ .Title }}</h4>
+              <div class="flex items-center gap-3">
+                {{ if eq .Status "done" }}
+                  <span class="badge badge-success badge-lg gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                    Completed
+                  </span>
+                {{ else if eq .Status "in_progress" }}
+                  <span class="badge badge-warning badge-lg gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    In Progress
+                  </span>
+                {{ else }}
+                  <span class="badge badge-info badge-lg gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Pending
+                  </span>
+                {{ end }}
+              </div>
+            </div>
+            <div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+              <div class="w-2 h-2 bg-gray-300 rounded-full"></div>
+              <div class="w-2 h-2 bg-gray-300 rounded-full"></div>
+              <div class="w-2 h-2 bg-gray-300 rounded-full"></div>
+            </div>
+          </div>
+          <!-- Task Description -->
+          {{ if .Description }}
+            <div class="task-description mb-4 leading-relaxed">{{ .Description }}</div>
+          {{ end }}
+          
+          <!-- Task Metadata -->
+          <div class="task-metadata flex items-center justify-between text-sm mb-4">
+            <div class="flex items-center gap-4">
+              <div class="flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                <span>Created {{ .CreatedAt.Format "Jan 2, 2006" }}</span>
+              </div>
+              {{ if .DueDate }}
+                <div class="flex items-center gap-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0a9 9 0 0118 0z" />
+                  </svg>
+                  <span>Due {{ formatDate .DueDate }}</span>
+                </div>
+              {{ end }}
+            </div>
+            <div class="task-id text-xs px-2 py-1 rounded-full">
+              ID: {{ .ID }}
+            </div>
+          </div>
+          <!-- Task Actions -->
+          <div class="flex items-center justify-between pt-4" style="border-top: 1px solid var(--border-color);">
+            <div class="flex gap-3">
+              {{ if ne .Status "done" }}
+                <form action="/tasks/{{ .ID }}/complete" method="post" class="inline">
+                  <button class="btn btn-success btn-sm gap-2 hover:scale-105 transition-all duration-200" type="submit" title="Mark as done">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                    Mark Done
+                  </button>
+                </form>
+              {{ else }}
+                <div class="btn btn-ghost btn-sm gap-2 cursor-default">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                  </svg>
+                  Completed
+                </div>
+              {{ end }}
+              <form action="/tasks/{{ .ID }}" method="post" class="inline">
+                <input type="hidden" name="_method" value="DELETE">
+                <button class="btn btn-error btn-outline btn-sm gap-2 hover:scale-105 transition-all duration-200" type="submit" title="Delete task" onclick="return confirm('Are you sure you want to delete this task?\n\nThis action cannot be undone.')">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                  Delete
+                </button>
+              </form>
+            </div>
+            <div class="text-xs" style="color: var(--text-muted);">
+              {{ if eq .Status "done" }}
+                <span class="text-green-600 dark:text-green-400">✓ Task completed</span>
+              {{ else if eq .Status "in_progress" }}
+                <span class="text-yellow-600 dark:text-yellow-400">⏳ In progress</span>
+              {{ else }}
+                <span class="text-blue-600 dark:text-blue-400">📋 Pending</span>
+              {{ end }}
+            </div>
+          </div>
+        </div>
+      </div>
+    {{ end }}
+  </div>
+{{ end }}
