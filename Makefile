@@ -1,13 +1,31 @@
-.PHONY: build run clean test
+# Simple Makefile for a Go (Gin) app
+APP ?= checkmate
+PKG ?= $(APP)
+BIN_DIR ?= ./bin
+GO ?= go
 
-build: 
-	go build -o checkmate main.go
+.PHONY: all build run test fmt tidy clean
+
+all: build
+
+build:
+	@echo "==> building $(APP)"
+	$(GO) build -o $(BIN_DIR)/$(APP) $(PKG)
 
 run:
-	go run main.go
-
-clean:
-	rm -f checkmate
+	@echo "==> running"
+	$(GO) run $(PKG)
 
 test:
-	go test ./...
+	$(GO) test ./...
+
+fmt:
+	$(GO) fmt ./...
+
+tidy:
+	$(GO) mod tidy
+
+clean:
+	@rm -rf $(BIN_DIR)
+	@echo "cleaned"
+
