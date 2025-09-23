@@ -76,21 +76,11 @@ func main() {
 	r.PATCH("/tasks/:id", func(c *gin.Context) { patchTaskHandler(c, db) })
 	r.DELETE("/tasks/:id", func(c *gin.Context) { deleteTaskHandler(c, db) })
 	r.POST("/tasks/:id/complete", func(c *gin.Context) { completeTaskHandler(c, db) })
+	r.POST("/add", func(c *gin.Context) { createTaskFormHandlerClassic(c, db) })
 
 	// simple health
 	r.GET("/health", func(c *gin.Context) { c.JSON(http.StatusOK, gin.H{"status": "ok"}) })
-
-	// --- HTML + HTMX routes ---
 	r.GET("/", func(c *gin.Context) { renderIndex(c, db) })
-	// partial list for HTMX replacement
-	r.GET("/_tasks", func(c *gin.Context) { renderTasksPartial(c, db) })
-	// create via form (htmx posts form data)
-	r.POST("/_tasks", func(c *gin.Context) { createTaskFormHandler(c, db) })
-	// complete via HTMX
-	r.POST("/_tasks/:id/complete", func(c *gin.Context) { completeTaskHTML(c, db) })
-	// delete via HTMX
-	r.POST("/_tasks/:id/delete", func(c *gin.Context) { deleteTaskHTML(c, db) })
-
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
@@ -100,99 +90,7 @@ func main() {
 	if err := r.Run(":" + port); err != nil {
 		log.Fatalf("server failed: %v", err)
 	}
-}
-
-// ---------- HTML Handlers for HTMX frontend ----------
-
-func renderIndex(c *gin.Context, db *gorm.DB) {
-	// show page with first page of tasks
-	var tasks []Task
-	if err := db.Order("created_at DESC").Limit(50).Find(&tasks).Error; err != nil {
-		c.String(http.StatusInternalServerError, "failed to load tasks")
-		return
-	}
-	c.HTML(http.StatusOK, "index.html", gin.H{
-		"Tasks": tasks,
-	})
-}
-
-func renderTasksPartial(c *gin.Context, db *gorm.DB) {
-	var tasks []Task
-	if err := db.Order("created_at DESC").Limit(50).Find(&tasks).Error; err != nil {
-		c.String(http.StatusInternalServerError, "failed to load tasks")
-		return
-	}
-	c.HTML(http.StatusOK, "_task_row.html", gin.H{
-		"Tasks": tasks,
-	})
-}
-
-// createTaskFormHandler accepts form POST from HTMX and returns a new row (or updated list)
-func createTaskFormHandler(c *gin.Context, db *gorm.DB) {
-	title := c.PostForm("title")
-	description := c.PostForm("description")
-	dueDateStr := c.PostForm("due_date")
-	status := c.PostForm("status")
-	if status == "" {
-		status = "pending"
-	}
-	if !allowedStatuses[status] {
-		status = "pending"
-	}
-
-	var due *time.Time
-	if dueDateStr != "" {
-		t, err := time.Parse("2006-01-02", dueDateStr)
-		if err == nil {
-			due = &t
-		}
-	}
-
-	task := Task{
-		Title:       title,
-		Description: description,
-		Status:      status,
-		DueDate:     due,
-	}
-	if err := db.Create(&task).Error; err != nil {
-		// on error return a small fragment with error (could be improved)
-		c.String(http.StatusInternalServerError, "failed to create task")
-		return
-	}
-
-	// return the whole list partial so HTMX can swap it in (simple)
-	var tasks []Task
-	db.Order("created_at DESC").Limit(50).Find(&tasks)
-	c.HTML(http.StatusOK, "_task_row.html", gin.H{"Tasks": tasks})
-}
-
-func completeTaskHTML(c *gin.Context, db *gorm.DB) {
-	id := c.Param("id")
-	var task Task
-	if err := db.First(&task, id).Error; err != nil {
-		c.String(http.StatusNotFound, "task not found")
-		return
-	}
-	task.Status = "done"
-	if err := db.Save(&task).Error; err != nil {
-		c.String(http.StatusInternalServerError, "failed to update")
-		return
-	}
-	// return updated list partial (simple)
-	var tasks []Task
-	db.Order("created_at DESC").Limit(50).Find(&tasks)
-	c.HTML(http.StatusOK, "_task_row.html", gin.H{"Tasks": tasks})
-}
-
-func deleteTaskHTML(c *gin.Context, db *gorm.DB) {
-	id := c.Param("id")
-	if err := db.Delete(&Task{}, id).Error; err != nil {
-		c.String(http.StatusInternalServerError, "failed to delete")
-		return
-	}
-	var tasks []Task
-	db.Order("created_at DESC").Limit(50).Find(&tasks)
-	c.HTML(http.StatusOK, "_task_row.html", gin.H{"Tasks": tasks})
+	log.Printf("The website is running at http://localhost:%s/", port)
 }
 
 // ---------- (Existing JSON handlers below) ----------
@@ -366,4 +264,41 @@ func completeTaskHandler(c *gin.Context, db *gorm.DB) {
 		return
 	}
 	c.JSON(http.StatusOK, task)
+}
+
+// renderIndex renders the index page with tasks
+func renderIndex(c *gin.Context, db *gorm.DB) {
+	var tasks []Task
+	db.Order("created_at DESC").Limit(50).Find(&tasks)
+	c.HTML(http.StatusOK, "index.html", gin.H{
+		"Tasks": tasks,
+	})
+}
+
+// createTaskFormHandlerClassic handles task creation via form (HTML)
+func createTaskFormHandlerClassic(c *gin.Context, db *gorm.DB) {
+	title := c.PostForm("title")
+	description := c.PostForm("description")
+	dueDateStr := c.PostForm("due_date")
+	status := "pending"
+
+	var due *time.Time
+	if dueDateStr != "" {
+		t, err := time.Parse("2006-01-02", dueDateStr)
+		if err == nil {
+			due = &t
+		}
+	}
+
+	task := Task{
+		Title:       title,
+		Description: description,
+		Status:      status,
+		DueDate:     due,
+	}
+	if err := db.Create(&task).Error; err != nil {
+		c.String(http.StatusInternalServerError, "failed to create task")
+		return
+	}
+	c.Redirect(http.StatusSeeOther, "/")
 }

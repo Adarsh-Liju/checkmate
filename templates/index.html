@@ -3,58 +3,186 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Tasks · HTMX + Tailwind</title>
-
-    <!-- Tailwind via CDN (for quick dev) -->
-    <script src="https://cdn.tailwindcss.com"></script>
-
+    <title>Checkmate Tasks</title>
+    <!-- Google Fonts: Roboto -->
+    <link href="https://fonts.googleapis.com/css?family=Roboto:400,500,700&display=swap" rel="stylesheet">
+    <!-- Materialize CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet">
+    <!-- Material Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <!-- HTMX -->
     <script src="https://unpkg.com/htmx.org@1.11.1"></script>
+    <style>
+      body {
+        font-family: 'Roboto', Arial, sans-serif;
+        background: #f5f5f5;
+        transition: background 0.3s, color 0.3s;
+      }
+      .tasks-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .tasks-header .material-icons {
+        color: #1976d2;
+      }
+      .fab-btn {
+        position: fixed;
+        right: 32px;
+        bottom: 32px;
+        z-index: 100;
+      }
+      /* Dark mode styles */
+      body.dark-mode {
+        background: #181a20 !important;
+        color: #e0e0e0 !important;
+      }
+      body.dark-mode nav,
+      body.dark-mode .card,
+      body.dark-mode .collapsible-body {
+        background: #23262f !important;
+        color: #e0e0e0 !important;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.25) !important;
+      }
+      body.dark-mode .input-field input,
+      body.dark-mode .input-field textarea {
+        background: #23262f !important;
+        color: #e0e0e0 !important;
+        border-bottom: 1px solid #616161 !important;
+      }
+      body.dark-mode .input-field label {
+        color: #bdbdbd !important;
+      }
+      body.dark-mode .collapsible-header {
+        background: #23262f !important;
+        color: #e0e0e0 !important;
+      }
+      body.dark-mode .btn, body.dark-mode .btn-large, body.dark-mode .btn-floating {
+        background: #1976d2 !important;
+        color: #fff !important;
+      }
+      body.dark-mode .btn-flat {
+        color: #90caf9 !important;
+      }
+      body.dark-mode .material-icons {
+        color: #90caf9 !important;
+      }
+      body.dark-mode .card-title, body.dark-mode .grey-text, body.dark-mode .black-text {
+        color: #e0e0e0 !important;
+      }
+      body.dark-mode .select-dropdown {
+        background: #23262f !important;
+        color: #e0e0e0 !important;
+      }
+      body.dark-mode .dropdown-content {
+        background: #23262f !important;
+        color: #e0e0e0 !important;
+      }
+    </style>
   </head>
-  <body class="bg-slate-50 min-h-screen">
-    <div class="max-w-4xl mx-auto py-10 px-4">
-      <header class="mb-6">
-        <h1 class="text-3xl font-semibold">Checkmate</h1>
-        <p class="text-sm text-slate-600">Tasks for everyone</p>
-      </header>
-
-      <section class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div class="md:col-span-1 bg-white p-4 rounded-xl shadow-sm">
-          <h2 class="font-medium mb-2">New task</h2>
-          <!-- HTMX form posts to /_tasks and swaps the tasks list -->
-          <form hx-post="/_tasks" hx-target="#tasks-list" hx-swap="outerHTML">
-            <div class="mb-2">
-              <label class="block text-xs text-slate-600">Title</label>
-              <input name="title" required class="w-full mt-1 p-2 border rounded" />
-            </div>
-            <div class="mb-2">
-              <label class="block text-xs text-slate-600">Description</label>
-              <textarea name="description" class="w-full mt-1 p-2 border rounded"></textarea>
-            </div>
-            <div class="mb-2">
-              <label class="block text-xs text-slate-600">Due date</label>
-              <input name="due_date" type="date" class="w-full mt-1 p-2 border rounded" />
-            </div>
-
-            <div class="flex items-center gap-2">
-              <button class="px-3 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-500" type="submit">Add</button>
-              <button type="reset" class="px-3 py-2 border rounded">Reset</button>
-            </div>
-          </form>
+  <body>
+    <nav class="white z-depth-0" style="box-shadow:none;">
+      <div class="nav-wrapper container" style="display:flex;align-items:center;justify-content:space-between;">
+        <span class="tasks-header">
+          <i class="material-icons">check_circle</i>
+          <span class="black-text" style="font-size:2rem;font-weight:500;">Checkmate</span>
+        </span>
+        <div style="display:flex;align-items:center;gap:1.5rem;">
+          <span class="grey-text text-darken-1" style="font-size:1rem;">Tasks for everyone</span>
+          <a href="#" id="darkModeToggle" class="btn-flat waves-effect" title="Toggle dark mode" style="min-width:40px;padding:0 8px;">
+            <i class="material-icons" id="darkModeIcon">dark_mode</i>
+          </a>
         </div>
+      </div>
+    </nav>
 
-        <div class="md:col-span-2 bg-white p-4 rounded-xl shadow-sm">
-          <div class="flex items-center justify-between mb-3">
-            <h2 class="font-medium">Tasks</h2>
-            <div class="text-sm text-slate-500">Most recent first</div>
+    <div class="container" style="max-width:600px;margin-top:2.5rem;">
+      <ul class="collapsible popout" style="border:none;box-shadow:none;">
+        <li class="active">
+          <div class="collapsible-header" style="background:transparent;border:none;">
+            <i class="material-icons">add_task</i>
+            <span style="font-weight:500;">Add New Task</span>
           </div>
+          <div class="collapsible-body" style="background:#fff;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.04);">
+            <form action="/add" method="post">
+              <div class="input-field">
+                <input id="title" name="title" type="text" required>
+                <label for="title">Title</label>
+              </div>
+              <div class="input-field">
+                <textarea id="description" name="description" class="materialize-textarea"></textarea>
+                <label for="description">Description</label>
+              </div>
+              <div class="input-field">
+                <input id="due_date" name="due_date" type="date">
+                <label for="due_date" class="active">Due date</label>
+              </div>
+              <div style="margin-top:1.5rem;">
+                <button class="btn waves-effect waves-light blue" type="submit">Add
+                  <i class="material-icons right">add</i>
+                </button>
+                <button type="reset" class="btn-flat">Reset</button>
+              </div>
+            </form>
+          </div>
+        </li>
+      </ul>
 
-          <div id="tasks-list">
-            {{/* initial render of tasks partial included */}}
-            {{ template "_task_row.html" . }}
+      <div class="section">
+        <div class="row" style="margin-bottom:0;">
+          <div class="col s12">
+            <div class="card white z-depth-1" style="border-radius:12px;">
+              <div class="card-content">
+                <span class="card-title" style="font-weight:500;font-size:1.3rem;">Tasks</span>
+                <span class="grey-text right" style="font-size:0.95rem;">Most recent first</span>
+                <div id="tasks-list" style="margin-top:1.5rem;">
+                  {{ template "_task_row.html" . }}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-      </section>
+      </div>
     </div>
+
+    <!-- Floating Action Button -->
+    <div class="fixed-action-btn fab-btn">
+      <a class="btn-floating btn-large blue waves-effect waves-light" onclick="document.querySelector('.collapsible').classList.add('active');document.querySelector('.collapsible').scrollIntoView({behavior:'smooth'});">
+        <i class="material-icons">add</i>
+      </a>
+    </div>
+
+    <!-- Materialize JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        var elems = document.querySelectorAll('.collapsible');
+        M.Collapsible.init(elems, {accordion: false});
+
+        // Dark mode logic
+        const body = document.body;
+        const toggle = document.getElementById('darkModeToggle');
+        const icon = document.getElementById('darkModeIcon');
+        // Set initial mode
+        function setDarkMode(on) {
+          if (on) {
+            body.classList.add('dark-mode');
+            icon.textContent = 'light_mode';
+          } else {
+            body.classList.remove('dark-mode');
+            icon.textContent = 'dark_mode';
+          }
+        }
+        // Check localStorage
+        let dark = localStorage.getItem('darkMode') === 'true';
+        setDarkMode(dark);
+        toggle.addEventListener('click', function(e) {
+          e.preventDefault();
+          dark = !dark;
+          setDarkMode(dark);
+          localStorage.setItem('darkMode', dark);
+        });
+      });
+    </script>
   </body>
 </html>
