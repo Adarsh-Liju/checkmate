@@ -1,0 +1,41 @@
+{{ define "_task_row.html" }}
+  <div class="space-y-3">
+    {{ if not .Tasks }}
+      <div class="text-sm text-slate-500">No tasks yet.</div>
+    {{ end }}
+    {{ range .Tasks }}
+      <div class="p-3 border rounded hover:shadow-sm flex items-start justify-between">
+        <div>
+          <div class="flex items-center gap-2">
+            <h3 class="font-semibold">{{ .Title }}</h3>
+            {{ if eq .Status "done" }}
+              <span class="text-xs px-2 py-1 bg-green-100 text-green-800 rounded">done</span>
+            {{ else if eq .Status "in_progress" }}
+              <span class="text-xs px-2 py-1 bg-yellow-100 text-yellow-800 rounded">in progress</span>
+            {{ else }}
+              <span class="text-xs px-2 py-1 bg-slate-100 text-slate-800 rounded">pending</span>
+            {{ end }}
+          </div>
+          {{ if .Description }}
+            <p class="text-sm text-slate-600 mt-1">{{ .Description }}</p>
+          {{ end }}
+          <div class="text-xs text-slate-400 mt-2">
+            Created: {{ .CreatedAt.Format "2006-01-02 15:04" }}
+            {{ if .DueDate }} • Due: {{ formatDate .DueDate }}{{ end }}
+          </div>
+        </div>
+
+        <div class="flex flex-col gap-2 items-end">
+          {{ if ne .Status "done" }}
+            <form hx-post="/_tasks/{{ .ID }}/complete" hx-target="#tasks-list" hx-swap="outerHTML">
+              <button class="text-xs px-2 py-1 bg-green-600 text-white rounded">Mark done</button>
+            </form>
+          {{ end }}
+          <form hx-post="/_tasks/{{ .ID }}/delete" hx-target="#tasks-list" hx-swap="outerHTML" onsubmit="return confirm('Delete this task?')">
+            <button class="text-xs px-2 py-1 border rounded">Delete</button>
+          </form>
+        </div>
+      </div>
+    {{ end }}
+  </div>
+{{ end }}

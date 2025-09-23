@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Tasks · HTMX + Tailwind</title>
+
+    <!-- Tailwind via CDN (for quick dev) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- HTMX -->
+    <script src="https://unpkg.com/htmx.org@1.11.1"></script>
+  </head>
+  <body class="bg-slate-50 min-h-screen">
+    <div class="max-w-4xl mx-auto py-10 px-4">
+      <header class="mb-6">
+        <h1 class="text-3xl font-semibold">Checkmate</h1>
+        <p class="text-sm text-slate-600">Tasks for everyone</p>
+      </header>
+
+      <section class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="md:col-span-1 bg-white p-4 rounded-xl shadow-sm">
+          <h2 class="font-medium mb-2">New task</h2>
+          <!-- HTMX form posts to /_tasks and swaps the tasks list -->
+          <form hx-post="/_tasks" hx-target="#tasks-list" hx-swap="outerHTML">
+            <div class="mb-2">
+              <label class="block text-xs text-slate-600">Title</label>
+              <input name="title" required class="w-full mt-1 p-2 border rounded" />
+            </div>
+            <div class="mb-2">
+              <label class="block text-xs text-slate-600">Description</label>
+              <textarea name="description" class="w-full mt-1 p-2 border rounded"></textarea>
+            </div>
+            <div class="mb-2">
+              <label class="block text-xs text-slate-600">Due date</label>
+              <input name="due_date" type="date" class="w-full mt-1 p-2 border rounded" />
+            </div>
+
+            <div class="flex items-center gap-2">
+              <button class="px-3 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-500" type="submit">Add</button>
+              <button type="reset" class="px-3 py-2 border rounded">Reset</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="md:col-span-2 bg-white p-4 rounded-xl shadow-sm">
+          <div class="flex items-center justify-between mb-3">
+            <h2 class="font-medium">Tasks</h2>
+            <div class="text-sm text-slate-500">Most recent first</div>
+          </div>
+
+          <div id="tasks-list">
+            {{/* initial render of tasks partial included */}}
+            {{ template "_task_row.html" . }}
+          </div>
+        </div>
+      </section>
+    </div>
+  </body>
+</html>

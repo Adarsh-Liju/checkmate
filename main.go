@@ -1,6 +1,8 @@
+// main.go
 package main
 
 import (
+	"html/template"
 	"log"
 	"net/http"
 	"os"
@@ -52,10 +54,21 @@ func main() {
 	// create gin router
 	r := gin.Default()
 
+	// load html templates
+	r.SetFuncMap(template.FuncMap{
+		"formatDate": func(t *time.Time) string {
+			if t == nil {
+				return ""
+			}
+			return t.Format("2006-01-02")
+		},
+	})
+	r.LoadHTMLGlob("templates/*.html")
+
 	// CORS - allow all for dev (adjust in prod)
 	r.Use(cors.Default())
 
-	// routes
+	// JSON API routes (preserve existing)
 	r.POST("/tasks", func(c *gin.Context) { createTaskHandler(c, db) })
 	r.GET("/tasks", func(c *gin.Context) { listTasksHandler(c, db) })
 	r.GET("/tasks/:id", func(c *gin.Context) { getTaskHandler(c, db) })
@@ -66,6 +79,17 @@ func main() {
 
 	// simple health
 	r.GET("/health", func(c *gin.Context) { c.JSON(http.StatusOK, gin.H{"status": "ok"}) })
+
+	// --- HTML + HTMX routes ---
+	r.GET("/", func(c *gin.Context) { renderIndex(c, db) })
+	// partial list for HTMX replacement
+	r.GET("/_tasks", func(c *gin.Context) { renderTasksPartial(c, db) })
+	// create via form (htmx posts form data)
+	r.POST("/_tasks", func(c *gin.Context) { createTaskFormHandler(c, db) })
+	// complete via HTMX
+	r.POST("/_tasks/:id/complete", func(c *gin.Context) { completeTaskHTML(c, db) })
+	// delete via HTMX
+	r.POST("/_tasks/:id/delete", func(c *gin.Context) { deleteTaskHTML(c, db) })
 
 	port := os.Getenv("PORT")
 	if port == "" {
@@ -78,6 +102,100 @@ func main() {
 	}
 }
 
+// ---------- HTML Handlers for HTMX frontend ----------
+
+func renderIndex(c *gin.Context, db *gorm.DB) {
+	// show page with first page of tasks
+	var tasks []Task
+	if err := db.Order("created_at DESC").Limit(50).Find(&tasks).Error; err != nil {
+		c.String(http.StatusInternalServerError, "failed to load tasks")
+		return
+	}
+	c.HTML(http.StatusOK, "index.html", gin.H{
+		"Tasks": tasks,
+	})
+}
+
+func renderTasksPartial(c *gin.Context, db *gorm.DB) {
+	var tasks []Task
+	if err := db.Order("created_at DESC").Limit(50).Find(&tasks).Error; err != nil {
+		c.String(http.StatusInternalServerError, "failed to load tasks")
+		return
+	}
+	c.HTML(http.StatusOK, "_task_row.html", gin.H{
+		"Tasks": tasks,
+	})
+}
+
+// createTaskFormHandler accepts form POST from HTMX and returns a new row (or updated list)
+func createTaskFormHandler(c *gin.Context, db *gorm.DB) {
+	title := c.PostForm("title")
+	description := c.PostForm("description")
+	dueDateStr := c.PostForm("due_date")
+	status := c.PostForm("status")
+	if status == "" {
+		status = "pending"
+	}
+	if !allowedStatuses[status] {
+		status = "pending"
+	}
+
+	var due *time.Time
+	if dueDateStr != "" {
+		t, err := time.Parse("2006-01-02", dueDateStr)
+		if err == nil {
+			due = &t
+		}
+	}
+
+	task := Task{
+		Title:       title,
+		Description: description,
+		Status:      status,
+		DueDate:     due,
+	}
+	if err := db.Create(&task).Error; err != nil {
+		// on error return a small fragment with error (could be improved)
+		c.String(http.StatusInternalServerError, "failed to create task")
+		return
+	}
+
+	// return the whole list partial so HTMX can swap it in (simple)
+	var tasks []Task
+	db.Order("created_at DESC").Limit(50).Find(&tasks)
+	c.HTML(http.StatusOK, "_task_row.html", gin.H{"Tasks": tasks})
+}
+
+func completeTaskHTML(c *gin.Context, db *gorm.DB) {
+	id := c.Param("id")
+	var task Task
+	if err := db.First(&task, id).Error; err != nil {
+		c.String(http.StatusNotFound, "task not found")
+		return
+	}
+	task.Status = "done"
+	if err := db.Save(&task).Error; err != nil {
+		c.String(http.StatusInternalServerError, "failed to update")
+		return
+	}
+	// return updated list partial (simple)
+	var tasks []Task
+	db.Order("created_at DESC").Limit(50).Find(&tasks)
+	c.HTML(http.StatusOK, "_task_row.html", gin.H{"Tasks": tasks})
+}
+
+func deleteTaskHTML(c *gin.Context, db *gorm.DB) {
+	id := c.Param("id")
+	if err := db.Delete(&Task{}, id).Error; err != nil {
+		c.String(http.StatusInternalServerError, "failed to delete")
+		return
+	}
+	var tasks []Task
+	db.Order("created_at DESC").Limit(50).Find(&tasks)
+	c.HTML(http.StatusOK, "_task_row.html", gin.H{"Tasks": tasks})
+}
+
+// ---------- (Existing JSON handlers below) ----------
 // createTaskHandler creates a new task
 func createTaskHandler(c *gin.Context, db *gorm.DB) {
 	var payload Task
@@ -249,4 +367,3 @@ func completeTaskHandler(c *gin.Context, db *gorm.DB) {
 	}
 	c.JSON(http.StatusOK, task)
 }
-
