@@ -1,49 +1,51 @@
 {{ define "_task_row.html" }}
   <div>
     {{ if not .Tasks }}
-      <div class="center-align grey-text" style="margin:2rem 0;">
-        <i class="material-icons large" style="opacity:0.3;">check_circle_outline</i>
-        <div style="font-size:1.1rem;margin-top:0.5rem;">No tasks yet. Add your first task!</div>
+      <div class="flex flex-col items-center text-base-content/60 my-8">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mb-2 opacity-30" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2l4-4m6 2a9 9 0 11-18 0a9 9 0 0118 0z" /></svg>
+        <div class="text-lg">No tasks yet. Add your first task!</div>
       </div>
     {{ end }}
     {{ range .Tasks }}
-      <div class="card z-depth-1" style="border-radius:12px;margin-bottom:1.2rem;">
-        <div class="card-content" style="padding-bottom:0.7rem;">
-          <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem;">
-            <div style="flex:1;min-width:0;">
-              <span class="card-title" style="font-size:1.15rem;font-weight:500;word-break:break-word;">{{ .Title }}</span>
-              {{ if eq .Status "done" }}
-                <span class="new badge green" data-badge-caption="done" style="margin-left:0.5rem;"></span>
-              {{ else if eq .Status "in_progress" }}
-                <span class="new badge yellow black-text" data-badge-caption="in progress" style="margin-left:0.5rem;"></span>
-              {{ else }}
-                <span class="new badge blue lighten-2 white-text" data-badge-caption="pending" style="margin-left:0.5rem;"></span>
-              {{ end }}
-              {{ if .Description }}
-                <div class="grey-text text-darken-1" style="margin-top:0.3rem;font-size:1rem;word-break:break-word;">{{ .Description }}</div>
-              {{ end }}
-              <div class="grey-text" style="font-size:0.93rem;margin-top:0.5rem;">
-                <i class="material-icons tiny" style="vertical-align:middle;">event</i>
-                Created: {{ .CreatedAt.Format "2006-01-02 15:04" }}
-                {{ if .DueDate }}
-                  &nbsp;•&nbsp;<i class="material-icons tiny" style="vertical-align:middle;">schedule</i> Due: {{ formatDate .DueDate }}
-                {{ end }}
-              </div>
-            </div>
-            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:0.5rem;">
-              {{ if ne .Status "done" }}
-                <form action="/complete/{{ .ID }}" method="post" style="margin:0;">
-                  <button class="btn-small green waves-effect waves-light" type="submit" title="Mark as done">
-                    <i class="material-icons left" style="font-size:1.1rem;">check</i>Done
-                  </button>
-                </form>
-              {{ end }}
-              <form action="/delete/{{ .ID }}" method="post" style="margin:0;" onsubmit="return confirm('Delete this task?')">
-                <button class="btn-small btn-flat red-text" type="submit" title="Delete task">
-                  <i class="material-icons left" style="font-size:1.1rem;">delete</i>Delete
+      <div class="card bg-base-100 shadow mb-4">
+        <div class="card-body p-4 flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-semibold text-lg">{{ .Title }}</span>
+            {{ if eq .Status "done" }}
+              <span class="badge badge-success">done</span>
+            {{ else if eq .Status "in_progress" }}
+              <span class="badge badge-warning">in progress</span>
+            {{ else }}
+              <span class="badge badge-info">pending</span>
+            {{ end }}
+          </div>
+          {{ if .Description }}
+            <div class="text-base-content/70">{{ .Description }}</div>
+          {{ end }}
+          <div class="text-xs text-base-content/50 flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+            Created: {{ .CreatedAt.Format "2006-01-02 15:04" }}
+            {{ if .DueDate }}
+              <span class="mx-1">•</span>
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0a9 9 0 0118 0z" /></svg>
+              Due: {{ formatDate .DueDate }}
+            {{ end }}
+          </div>
+          <div class="flex gap-2 mt-2">
+            {{ if ne .Status "done" }}
+              <form action="/complete/{{ .ID }}" method="post">
+                <button class="btn btn-success btn-sm" type="submit" title="Mark as done">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+                  Done
                 </button>
               </form>
-            </div>
+            {{ end }}
+            <form action="/delete/{{ .ID }}" method="post" onsubmit="return confirm('Delete this task?')">
+              <button class="btn btn-error btn-outline btn-sm" type="submit" title="Delete task">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                Delete
+              </button>
+            </form>
           </div>
         </div>
       </div>

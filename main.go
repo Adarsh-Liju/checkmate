@@ -87,7 +87,8 @@ func main() {
 	}
 
 	log.Printf("listening on :%s, using DB: %s", port, dbPath)
-	if err := r.Run(":" + port); err != nil {
+	if err := r.Run(":" + port); 
+	err != nil {
 		log.Fatalf("server failed: %v", err)
 	}
 	log.Printf("The website is running at http://localhost:%s/", port)
